@@ -29,6 +29,7 @@ const float SCREEN_NEAR = 0.1f;
 ////////////////////////////////////////////////////////////////////////////////
 class GraphicsClass
 {
+
 public:
 	GraphicsClass();
 	GraphicsClass(const GraphicsClass&);
@@ -48,6 +49,9 @@ private:
 
 	LightShaderClass* m_LightShader;
 	LightClass* m_Light;
+
+	vector<const wchar_t*> mObjectPaths;
+	vector<const wchar_t*> mTexturePaths;
 };
 
 #endif

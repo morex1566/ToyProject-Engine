@@ -10,6 +10,7 @@
 //////////////
 #include <d3d11.h>
 #include <directxmath.h>
+#include <vector>
 
 using namespace DirectX;
 
@@ -50,7 +51,16 @@ private:
 
 	struct InstanceType
 	{
-		XMFLOAT3 position;
+		XMFLOAT3 Position;
+	};
+
+	struct Model
+	{
+		ModelType* Coordinate;
+		TextureClass* Texture;
+		int InstanceCount;
+		int IndexCount;
+		int VertexCount;
 	};
 
 public:
@@ -58,19 +68,18 @@ public:
 	ModelClass(const ModelClass&);
 	~ModelClass();
 
-	bool Initialize(ID3D11Device*, const WCHAR*, const WCHAR*);
+	bool Initialize(ID3D11Device*, vector<const wchar_t*>, vector<const wchar_t*>);
 	void Shutdown();
 	void Render(ID3D11DeviceContext*);
 
-	int GetVertexCount() const;
-	int GetInstanceCount() const;
+	int GetIndexCount();
+	int GetVertexCount(Model*);
+	int GetInstanceCount(Model*);
 	ID3D11ShaderResourceView* GetTexture();
 
 	bool LoadModel(const WCHAR*);
 	void ReleaseModel();
 
-	bool ReadFileCounts(const WCHAR*);
-	bool LoadDataStructures(const WCHAR*, int, int, int, int);
 
 private:
 	bool InitializeBuffers(ID3D11Device*);
@@ -80,12 +89,16 @@ private:
 	bool LoadTexture(ID3D11Device*, const WCHAR*);
 	void ReleaseTexture();
 
+	bool ReadFileCounts(const WCHAR*);
+	bool LoadDataStructures(const WCHAR*, int, int, int, int);
+
 private:
-	ID3D11Buffer *m_vertexBuffer;
-	ID3D11Buffer* m_instanceBuffer;
-	int m_vertexCount, m_instanceCount, m_textureCount, m_normalCount, m_faceCount;
+	ID3D11Buffer* m_vertexBuffer, * m_indexBuffer, * mInstanceBuffer;
+	int m_vertexCount, m_indexCount, m_textureCount, m_normalCount, m_faceCount;
 	TextureClass* m_Texture;
+
 	ModelType* m_model;
+	vector<Model*> mModels;
 };
 
 #endif
