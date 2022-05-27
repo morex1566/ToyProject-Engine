@@ -9,12 +9,17 @@
 // INCLUDES //
 //////////////
 #include <directxmath.h>
+#include "Utility.h"
 
 using namespace DirectX;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: LightClass
 ////////////////////////////////////////////////////////////////////////////////
+
+
+using namespace std;
+
 class LightClass
 {
 public:
@@ -34,12 +39,23 @@ public:
 	XMFLOAT4 GetSpecularColor();
 	float GetSpecularPower();
 
+	void SetAmbientOnOff();
+	void SetDiffuseOnOff();
+	void SetSpecularOnOff();
+
+	float GetAmbientOnOff();
+	float GetDiffuseOnOff();
+	float GetSpecularOnOff();
+
 private:
 	XMFLOAT4 m_ambientColor;
 	XMFLOAT4 m_diffuseColor;
 	XMFLOAT3 m_direction;
 	XMFLOAT4 m_specularColor;
 	float m_specularPower;
+	float mAmbientOnOff;
+	float mDiffuseOnOff;
+	float mSpecularOnOff;
 };
 
 #endif

@@ -11,6 +11,7 @@ GraphicsClass::GraphicsClass()
 	m_Model = 0;
 	m_LightShader = 0;
 	m_Light = 0;
+
 }
 
 
@@ -29,8 +30,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	bool result;
 
 	// Read data.
-	mObjectPaths.push_back(L"./data/cube.obj");
-	mTexturePaths.push_back(L"./data/seafloor.dds");
+	mPaths.push_back({ L"./data/Horse.obj" , L"./data/Horse_d.dds" });
+	mPaths.push_back({ L"./data/plane3.obj" , L"./data/block_d.dds" });
 
 	// Create the Direct3D object.
 	m_D3D = new D3DClass;
@@ -55,8 +56,8 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Set the initial position of the camera.
-	m_Camera->SetPosition(0.0f, 0.0f, -5.0f);	// for cube
-//	m_Camera->SetPosition(0.0f, 0.5f, -3.0f);	// for chair
+	m_Camera->SetPosition(0.0f, 2.0f, -5.0f);	// for cube
+	// m_Camera->SetPosition(0.0f, 0.5f, -3.0f);	// for chair
 		
 	// Create the model object.
 	m_Model = new ModelClass;
@@ -67,7 +68,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	// Initialize the model object.
 
-	result = m_Model->Initialize(m_D3D->GetDevice(), mObjectPaths, mTexturePaths);
+	result = m_Model->Initialize(m_D3D->GetDevice(), mPaths);
 	if(!result)
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
@@ -99,13 +100,13 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// Initialize the light object.
 	m_Light->SetAmbientColor(0.15f, 0.15f, 0.15f, 1.0f);
 //	m_Light->SetAmbientColor(0.0f, 0.0f, 0.0f, 1.0f);
-	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_Light->SetDiffuseColor(0.75f, 0.75f, 0.75f, 1.0f);
 //	m_Light->SetDiffuseColor(0.0f, 0.0f, 0.0f, 1.0f);
 //	m_Light->SetDirection(0.0f, 0.0f, 1.0f);
 //	m_Light->SetDirection(1.0f, 0.0f, 0.0f);
-	m_Light->SetDirection(1.0f, 0.0f, 1.0f);
+	m_Light->SetDirection(1.0f, -1.0f, 1.0f);
 	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Light->SetSpecularPower(32.0f);
+	m_Light->SetSpecularPower(16.0f);
 
 	return true;
 }
@@ -154,7 +155,7 @@ void GraphicsClass::Shutdown()
 	return;
 }
 
-bool GraphicsClass::Frame()
+bool GraphicsClass::Frame(float rotateYaw, float rotatePitch)
 {
 	bool result;
 
@@ -162,14 +163,15 @@ bool GraphicsClass::Frame()
 
 
 	// Update the rotation variable each frame.
-	rotation += XM_PI * 0.005f;
+	rotation += XM_PI * 0.0001f;
 	if (rotation > 360.0f)
 	{
 		rotation -= 360.0f;
 	}
 
+	
 	// Render the graphics scene.
-	result = Render(rotation);
+	result = Render(rotation, rotateYaw, rotatePitch);
 	if(!result)
 	{
 		return false;
@@ -178,7 +180,7 @@ bool GraphicsClass::Frame()
 	return true;
 }
 
-bool GraphicsClass::Render(float rotation)
+bool GraphicsClass::Render(float rotation, float rotateYaw, float rotatePitch)
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 	bool result;
@@ -187,7 +189,7 @@ bool GraphicsClass::Render(float rotation)
 	m_D3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// Generate the view matrix based on the camera's position.
-	m_Camera->Render();
+	m_Camera->Render(rotateYaw, rotatePitch);
 
 	// Get the world, view, and projection matrices from the camera and d3d objects.
 	m_Camera->GetViewMatrix(viewMatrix);
@@ -201,12 +203,11 @@ bool GraphicsClass::Render(float rotation)
 	m_Model->Render(m_D3D->GetDeviceContext());
 
 	// Render the model using the light shader.
-	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), 
+	result = m_LightShader->Render(m_D3D->GetDeviceContext(), m_Model->GetModels(),
 		worldMatrix, viewMatrix, projectionMatrix,
-		m_Model->GetTexture(), 
 		m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
-		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
-	
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower(),
+		m_Light->GetAmbientOnOff(), m_Light->GetDiffuseOnOff(), m_Light->GetSpecularOnOff());
 	if(!result)
 	{
 		return false;
@@ -216,4 +217,14 @@ bool GraphicsClass::Render(float rotation)
 	m_D3D->EndScene();
 
 	return true;
+}
+
+LightClass* GraphicsClass::GetLight()
+{
+	return m_Light;
+}
+
+CameraClass* GraphicsClass::GetCamera()
+{
+	return m_Camera;
 }

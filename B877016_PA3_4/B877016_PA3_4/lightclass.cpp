@@ -6,11 +6,15 @@
 
 LightClass::LightClass()
 {
+	mAmbientOnOff = 1.0f;
+	mDiffuseOnOff = 1.0f;
+	mSpecularOnOff = 1.0f;
 }
 
 
 LightClass::LightClass(const LightClass& other)
 {
+	
 }
 
 
@@ -71,4 +75,55 @@ XMFLOAT4 LightClass::GetSpecularColor()
 float LightClass::GetSpecularPower()
 {
 	return m_specularPower;
+}
+
+void LightClass::SetAmbientOnOff()
+{
+	if (mAmbientOnOff == 1.0f)
+	{
+		mAmbientOnOff = 0.0f;
+	}
+	else
+	{
+		mAmbientOnOff = 1.0f;
+	}
+}
+
+void LightClass::SetDiffuseOnOff()
+{
+	if (mDiffuseOnOff == 1.0f)
+	{
+		mDiffuseOnOff = 0.0f;
+	}
+	else
+	{
+		mDiffuseOnOff = 1.0f;
+	}
+}
+
+void LightClass::SetSpecularOnOff()
+{
+	if (mSpecularOnOff == 1.0f)
+	{
+		mSpecularOnOff = 0.0f;
+	}
+	else
+	{
+		mSpecularOnOff = 1.0f;
+	}
+}
+
+float LightClass::GetAmbientOnOff()
+{
+	return mAmbientOnOff;
+}
+
+float LightClass::GetDiffuseOnOff()
+{
+	return mDiffuseOnOff;
+}
+
+float LightClass::GetSpecularOnOff()
+{
+	return mSpecularOnOff;
 }

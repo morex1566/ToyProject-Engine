@@ -30,13 +30,19 @@ public:
 	XMFLOAT3 GetPosition();
 	XMFLOAT3 GetRotation();
 
-	void Render();
+	void MoveX(float);
+	void MoveZ(float);
+	void RotateVertical(float);
+	void RotateHorizontal(float);
+
+	void Render(float = 0, float = 0);
 	void GetViewMatrix(XMMATRIX&);
 
 private:
 	XMFLOAT3 m_position;
 	XMFLOAT3 m_rotation;
 	XMMATRIX m_viewMatrix;
+	float moveSpeed;
 };
 
 #endif

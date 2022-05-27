@@ -49,25 +49,37 @@ void LightShaderClass::Shutdown()
 	return;
 }
 
-bool LightShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, 
+bool LightShaderClass::Render(ID3D11DeviceContext* deviceContext, vector<Model*> models,
 	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, 
-	ID3D11ShaderResourceView* texture, 
 	XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor,
-	XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower)
+	XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower,
+	float ambientOnOff, float diffuseOnOff, float specularOnOff)
 {
 	bool result;
 
 
 	// Set the shader parameters that it will use for rendering.
-	result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, 
-		lightDirection, ambientColor, diffuseColor, cameraPosition, specularColor, specularPower);
-	if(!result)
+	for (int index = 0; index < models.size(); index++)
 	{
-		return false;
+		int startIndexCount = 0;
+
+		result = SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, models[index]->Texture->GetTexture(),
+			lightDirection, ambientColor, diffuseColor, cameraPosition, specularColor, specularPower,
+			ambientOnOff, diffuseOnOff, specularOnOff);
+		if (!result)
+		{
+			return false;
+		}
+
+		for (int temp = 0; temp < index; temp++)
+		{
+			startIndexCount += models[temp]->IndexCount;
+		}
+
+		// Now render the prepared buffers with the shader.
+		RenderShader(deviceContext, models[index]->VertexCount, models[index]->IndexCount, startIndexCount, models[index]->InstanceCount);
 	}
 
-	// Now render the prepared buffers with the shader.
-	RenderShader(deviceContext, indexCount);
 
 	return true;
 }
@@ -353,7 +365,8 @@ void LightShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND h
 bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, 
 	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, 
 	ID3D11ShaderResourceView* texture, 
-	XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor, XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower)
+	XMFLOAT3 lightDirection, XMFLOAT4 ambientColor, XMFLOAT4 diffuseColor, XMFLOAT3 cameraPosition, XMFLOAT4 specularColor, float specularPower,
+	float ambientOnOff, float diffuseOnOff, float specularOnOff)
 {
 	HRESULT result;
     D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -410,6 +423,10 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	dataPtr2->lightDirection = lightDirection;
 	dataPtr2->specularColor = specularColor;
 	dataPtr2->specularPower = specularPower;
+	dataPtr2->ambientOnOff = ambientOnOff;
+	dataPtr2->diffuseOnOff = diffuseOnOff;
+	dataPtr2->specularOnOff = specularOnOff;
+	dataPtr2->padding = 0.0f;
 
 	// Unlock the constant buffer.
 	deviceContext->Unmap(m_lightBuffer, 0);
@@ -447,7 +464,7 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 }
 
 
-void LightShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
+void LightShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int vertexCount, int indexCount, int startIndexCount, int instanceCount)
 {
 	// Set the vertex input layout.
 	deviceContext->IASetInputLayout(m_layout);
@@ -460,7 +477,7 @@ void LightShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int inde
 	deviceContext->PSSetSamplers(0, 1, &m_sampleState);
 
 	// Render the triangle.
-	deviceContext->DrawIndexed(indexCount, 0, 0);
+	deviceContext->DrawIndexed(indexCount, startIndexCount, 0);
 
 	return;
 }

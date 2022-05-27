@@ -54,6 +54,9 @@
     <ClInclude Include="AlignedAllocationPolicy.h">
       <Filter>소스 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Utility.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="systemclass.cpp">
@@ -95,5 +98,13 @@
     <ClCompile Include="modelclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\light.ps">
+      <Filter>소스 파일</Filter>
+    </None>
+    <None Include="data\light.vs">
+      <Filter>소스 파일</Filter>
+    </None>
   </ItemGroup>
 </Project>

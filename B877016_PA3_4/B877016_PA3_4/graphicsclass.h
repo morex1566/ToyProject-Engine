@@ -13,6 +13,7 @@
 #include "modelclass.h"
 #include "lightshaderclass.h"
 #include "lightclass.h"
+#include "Utility.h"
 
 
 /////////////
@@ -37,10 +38,12 @@ public:
 
 	bool Initialize(int, int, HWND);
 	void Shutdown();
-	bool Frame();
+	bool Frame(float, float);
 
+	LightClass* GetLight();
+	CameraClass* GetCamera();
 private:
-	bool Render(float);
+	bool Render(float, float, float);
 
 private:
 	D3DClass* m_D3D;
@@ -50,8 +53,7 @@ private:
 	LightShaderClass* m_LightShader;
 	LightClass* m_Light;
 
-	vector<const wchar_t*> mObjectPaths;
-	vector<const wchar_t*> mTexturePaths;
+	vector<DataPath> mPaths;
 };
 
 #endif

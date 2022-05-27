@@ -22,6 +22,7 @@
 ///////////////////////
 #include "inputclass.h"
 #include "graphicsclass.h"
+#include "Utility.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,6 +53,8 @@ private:
 
 	InputClass* m_Input;
 	GraphicsClass* m_Graphics;
+	float mLightInputTime;
+	float mCameraInputTime;
 };
 
 
