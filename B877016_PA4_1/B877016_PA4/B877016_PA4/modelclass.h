@@ -10,6 +10,7 @@
 //////////////
 #include <d3d11.h>
 #include <directxmath.h>
+#include <vector>
 
 using namespace DirectX;
 
@@ -17,6 +18,7 @@ using namespace DirectX;
 // MY CLASS INCLUDES //
 ///////////////////////
 #include "textureclass.h"
+#include "Utility.h"
 
 #include <fstream>
 using namespace std;
@@ -26,33 +28,25 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 class ModelClass
 {
-private:
-	struct VertexType
-	{
-		XMFLOAT3 position;
-	    XMFLOAT2 texture;
-		XMFLOAT3 normal;
-	};
-
-	struct ModelType
-	{
-		float x, y, z;
-		float tu, tv;
-		float nx, ny, nz;
-	};
 
 public:
+
 	ModelClass();
 	ModelClass(const ModelClass&);
 	~ModelClass();
 
-	bool Initialize(ID3D11Device*, const WCHAR*, const WCHAR*);
+	bool Initialize(ID3D11Device*, vector<DataPath>);
 	void Shutdown();
 	void Render(ID3D11DeviceContext*);
 
-	int GetIndexCount();
-	ID3D11ShaderResourceView* GetTexture();
 
+	int GetIndexCount(int);
+	int GetVertexCount(int);
+	int GetInstanceCount(int);
+	vector<Model*>& GetModels();
+	ID3D11ShaderResourceView* GetTexture(int);
+
+	bool Update();
 	bool LoadModel(const WCHAR*);
 	void ReleaseModel();
 
@@ -65,12 +59,15 @@ private:
 	bool LoadTexture(ID3D11Device*, const WCHAR*);
 	void ReleaseTexture();
 
-private:
-	ID3D11Buffer *m_vertexBuffer, *m_indexBuffer;
-	int m_vertexCount, m_indexCount;
-	TextureClass* m_Texture;
+	bool ReadFileCounts(const WCHAR*);
+	bool LoadDataStructures(const WCHAR*, int, int, int, int);
 
-	ModelType* m_model;
+private:
+	ID3D11Buffer* m_vertexBuffer, * m_indexBuffer, * mInstanceBuffer;
+	int m_textureCount, m_normalCount, m_faceCount;
+	vector<Model*> mModels;
+	int time = 1000;
+	float radian = 0.0f;
 };
 
 #endif

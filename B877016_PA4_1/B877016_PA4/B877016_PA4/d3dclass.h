@@ -21,12 +21,15 @@
 #include <directxmath.h>
 
 #include "AlignedAllocationPolicy.h"
+#include "Utility.h"
 
 using namespace DirectX;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: D3DClass
 ////////////////////////////////////////////////////////////////////////////////
+
+
 class D3DClass : public AlignedAllocationPolicy<16>
 {
 public:
@@ -49,6 +52,10 @@ public:
 
 	void GetVideoCardInfo(char*, int&);
 
+	void SwitchAlphaBlendingMode(BlendMode);
+	void TurnOnAlphaBlending();
+	void TurnOffAlphaBlending();
+
 private:
 	bool m_vsync_enabled;
 	int m_videoCardMemory;
@@ -61,6 +68,9 @@ private:
 	ID3D11DepthStencilState* m_depthStencilState;
 	ID3D11DepthStencilView* m_depthStencilView;
 	ID3D11RasterizerState* m_rasterState;
+	ID3D11BlendState* mAlphaEnableBlendingState;
+	ID3D11BlendState* mAlphaDisableBlendingState;
+
 	XMMATRIX m_projectionMatrix;
 	XMMATRIX m_worldMatrix;
 	XMMATRIX m_orthoMatrix;

@@ -14,6 +14,8 @@ D3DClass::D3DClass()
 	m_depthStencilState = 0;
 	m_depthStencilView = 0;
 	m_rasterState = 0;
+	mAlphaEnableBlendingState = 0;
+	mAlphaDisableBlendingState = 0;
 }
 
 
@@ -34,7 +36,8 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	IDXGIFactory* factory;
 	IDXGIAdapter* adapter;
 	IDXGIOutput* adapterOutput;
-	unsigned int numModes, i, numerator, denominator, stringLength;
+	unsigned int numModes, i, numerator, denominator;
+	size_t* stringLength;
 	DXGI_MODE_DESC* displayModeList;
 	DXGI_ADAPTER_DESC adapterDesc;
 	int error;
@@ -46,8 +49,11 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
 	D3D11_RASTERIZER_DESC rasterDesc;
 	D3D11_VIEWPORT viewport;
+	D3D11_BLEND_DESC blendStateDescription;
 	float fieldOfView, screenAspect;
 
+	// initialize
+	stringLength = 0;
 
 	// Store the vsync setting.
 	m_vsync_enabled = vsync;
@@ -119,7 +125,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	m_videoCardMemory = (int)(adapterDesc.DedicatedVideoMemory / 1024 / 1024);
 
 	// Convert the name of the video card to a character array and store it.
-	error = wcstombs_s(&stringLength, m_videoCardDescription, 128, adapterDesc.Description, 128);
+	error = wcstombs_s(stringLength, m_videoCardDescription, 128, adapterDesc.Description, 128);
 	if(error != 0)
 	{
 		return false;
@@ -319,6 +325,35 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 		return false;
 	}
 
+	ZeroMemory(&blendStateDescription, sizeof(D3D11_BLEND_DESC));
+
+	blendStateDescription.RenderTarget[0].BlendEnable = TRUE;
+	blendStateDescription.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendStateDescription.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendStateDescription.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendStateDescription.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendStateDescription.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendStateDescription.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendStateDescription.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+
+	// Create the blend state using the description.
+	result = m_device->CreateBlendState(&blendStateDescription, &mAlphaEnableBlendingState);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	// Modify the description to create an alpha disabled blend state description.
+	blendStateDescription.RenderTarget[0].BlendEnable = FALSE;
+
+	// Create the blend state using the description.
+	result = m_device->CreateBlendState(&blendStateDescription, &mAlphaDisableBlendingState);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+
 	// Now set the rasterizer state.
 	m_deviceContext->RSSetState(m_rasterState);
 	
@@ -406,6 +441,18 @@ void D3DClass::Shutdown()
 		m_swapChain = 0;
 	}
 
+	if (mAlphaEnableBlendingState)
+	{
+		mAlphaEnableBlendingState->Release();
+		mAlphaEnableBlendingState = 0;
+	}
+
+	if (mAlphaDisableBlendingState)
+	{
+		mAlphaDisableBlendingState->Release();
+		mAlphaDisableBlendingState = 0;
+	}
+
 	return;
 }
 
@@ -486,5 +533,80 @@ void D3DClass::GetVideoCardInfo(char* cardName, int& memory)
 {
 	strcpy_s(cardName, 128, m_videoCardDescription);
 	memory = m_videoCardMemory;
+	return;
+}
+
+void D3DClass::SwitchAlphaBlendingMode(BlendMode mode)
+{
+	D3D11_BLEND_DESC blendStateDescription;
+
+	ZeroMemory(&blendStateDescription, sizeof(D3D11_BLEND_DESC));
+
+
+	if (mode == BlendMode::ADDITIVE)
+	{
+		blendStateDescription.RenderTarget[0].BlendEnable = TRUE;
+		blendStateDescription.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+		blendStateDescription.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+		blendStateDescription.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+		blendStateDescription.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+		blendStateDescription.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+		blendStateDescription.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		blendStateDescription.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+
+		// Create the blend state using the description.
+		m_device->CreateBlendState(&blendStateDescription, &mAlphaEnableBlendingState);
+	}
+
+	if (mode == BlendMode::COMBINE)
+	{
+		blendStateDescription.RenderTarget[0].BlendEnable = TRUE;
+		blendStateDescription.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		blendStateDescription.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+		blendStateDescription.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+		blendStateDescription.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+		blendStateDescription.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+		blendStateDescription.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		blendStateDescription.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+
+		// Create the blend state using the description.
+		m_device->CreateBlendState(&blendStateDescription, &mAlphaEnableBlendingState);
+	}
+
+	return;
+}
+
+void D3DClass::TurnOnAlphaBlending()
+{
+	float blendFactor[4];
+
+
+	// Setup the blend factor.
+	blendFactor[0] = 0.0f;
+	blendFactor[1] = 0.0f;
+	blendFactor[2] = 0.0f;
+	blendFactor[3] = 0.0f;
+
+	// Turn on the alpha blending.
+	m_deviceContext->OMSetBlendState(mAlphaEnableBlendingState, blendFactor, 0xffffffff);
+
+	return;
+}
+
+
+void D3DClass::TurnOffAlphaBlending()
+{
+	float blendFactor[4];
+
+
+	// Setup the blend factor.
+	blendFactor[0] = 0.0f;
+	blendFactor[1] = 0.0f;
+	blendFactor[2] = 0.0f;
+	blendFactor[3] = 0.0f;
+
+	// Turn off the alpha blending.
+	m_deviceContext->OMSetBlendState(mAlphaDisableBlendingState, blendFactor, 0xffffffff);
+
 	return;
 }

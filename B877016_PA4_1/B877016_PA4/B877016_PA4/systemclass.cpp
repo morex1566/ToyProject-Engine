@@ -8,6 +8,8 @@ SystemClass::SystemClass()
 {
 	m_Input = 0;
 	m_Graphics = 0;
+	mLightInputTime = 0;
+	mCameraInputTime = 0;
 }
 
 
@@ -42,7 +44,7 @@ bool SystemClass::Initialize()
 	}
 
 	// Initialize the input object.
-	m_Input->Initialize();
+	m_Input->Initialize(m_hinstance, m_hwnd);
 
 	// Create the graphics object.  This object will handle rendering all the graphics for this application.
 	m_Graphics = new GraphicsClass;
@@ -75,6 +77,7 @@ void SystemClass::Shutdown()
 	// Release the input object.
 	if(m_Input)
 	{
+		m_Input->Shutdown();
 		delete m_Input;
 		m_Input = 0;
 	}
@@ -138,12 +141,72 @@ bool SystemClass::Frame()
 		return false;
 	}
 
+	if (mLightInputTime <= 0.0f)
+	{
+	
+		if (m_Input->IsKeyDown(0x36))
+		{
+			m_Graphics->GetLight()->SetAmbientOnOff();
+			mLightInputTime = 1.0f;
+		}
+
+		if (m_Input->IsKeyDown(0x37))
+		{
+			m_Graphics->GetLight()->SetDiffuseOnOff();
+			mLightInputTime = 1.0f;
+		}
+
+		if (m_Input->IsKeyDown(0x38))
+		{
+			m_Graphics->GetLight()->SetSpecularOnOff();
+			mLightInputTime = 1.0f;
+		}
+	}
+
+	if (mCameraInputTime <= 0.0f)
+	{
+		if (m_Input->IsKeyDown(0x57))
+		{
+			m_Graphics->GetCamera()->MoveZ(1.0f);
+			mCameraInputTime = 0.1f;
+		}
+
+		if (m_Input->IsKeyDown(0x53))
+		{
+			m_Graphics->GetCamera()->MoveZ(-1.0f);
+			mCameraInputTime = 0.1f;
+		}
+
+		if (m_Input->IsKeyDown(0x41))
+		{
+			m_Graphics->GetCamera()->MoveX(-1.0f);
+			mCameraInputTime = 0.1f;
+		}
+
+		if (m_Input->IsKeyDown(0x44))
+		{
+			m_Graphics->GetCamera()->MoveX(1.0f);
+			mCameraInputTime = 0.1f;
+		}
+	}
+
 	// Do the frame processing for the graphics object.
-	result = m_Graphics->Frame();
+	float rotateYaw = 0.0f;
+	float rotatePitch = 0.0f;
+	if (m_Input->Frame())
+	{
+		rotateYaw = m_Input->GetRotateYaw();
+		rotatePitch = m_Input->GetRotatePitch();
+	}
+
+	result = m_Graphics->Frame(rotateYaw, rotatePitch);
 	if(!result)
 	{
 		return false;
 	}
+
+	if (mLightInputTime >= 0.0f) { mLightInputTime -= 0.05f; }
+	if (mCameraInputTime >= 0.0f) { mCameraInputTime -= 0.05f; }
 
 	return true;
 }
@@ -235,8 +298,8 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	else
 	{
 		// If windowed then set it to 800x600 resolution.
-		screenWidth  = 1920;
-		screenHeight = 1080;
+		screenWidth  = 1600;
+		screenHeight = 900;
 
 		// Place the window in the middle of the screen.
 		posX = (GetSystemMetrics(SM_CXSCREEN) - screenWidth)  / 2;
